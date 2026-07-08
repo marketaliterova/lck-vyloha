@@ -133,8 +133,10 @@ input:focus,textarea:focus{outline:none;border-color:var(--gold)}
         <div class="field full"><label>Název zájezdu *</label><input id="fName" type="text" placeholder="např. Kréta"></div>
         <div class="frow">
           <div class="field"><label>Země / štítek</label><input id="fCountry" type="text" placeholder="Řecko"></div>
-          <div class="field"><label>Termín</label><input id="fTerm" type="text" placeholder="14.–21. 6. 2026"></div>
+          <div class="field"><label>Datum odletu (řazení)</label><input id="fDepart" type="date"></div>
         </div>
+        <div class="field full"><label>Termín (text k zobrazení)</label><input id="fTerm" type="text" placeholder="14.–21. 6. 2026">
+          <div class="hint">Nepovinné. Když necháš prázdné, ukáže se datum odletu. Řadí se vždy podle data odletu.</div></div>
         <div class="frow">
           <div class="field"><label>Cena dospělý (Kč)</label><input id="fPriceA" type="text" inputmode="numeric" placeholder="12490"></div>
           <div class="field"><label>Cena dítě (Kč)</label><input id="fPriceC" type="text" inputmode="numeric" placeholder="8990 (prázdné = neuvádět)"></div>
@@ -144,12 +146,12 @@ input:focus,textarea:focus{outline:none;border-color:var(--gold)}
           <div class="field"><label>Počet nocí</label><input id="fNights" type="text" inputmode="numeric" placeholder="7"></div>
         </div>
         <div class="checks">
-          <div class="checkrow"><input id="fTop" type="checkbox"><span>Top výběr (levý přehled)</span></div>
+          <div class="checkrow"><input id="fTop" type="checkbox"><span>Zvýraznit (zlatý rámeček)</span></div>
           <div class="checkrow"><input id="fLastmin" type="checkbox"><span>Štítek Last minute</span></div>
         </div>
         <div class="field full"><label>Body — co je super (každý na nový řádek)</label>
           <textarea id="fHi" placeholder="All inclusive u moře&#10;Přímé lety z Prahy&#10;Ideální pro rodiny"></textarea>
-          <div class="hint">Vpravo se zobrazí jako odrážky se zaškrtnutím. Ideálně 3.</div>
+          <div class="hint">Na dlaždici se ukáže první bod. Ostatní se hodí do zálohy / na budoucí použití.</div>
         </div>
         <div class="field full"><label>Kategorie (oddělte čárkou)</label><input id="fCats" type="text" placeholder="U moře, Poznávací"></div>
         <div class="field full"><label>Foto — URL</label><input id="fImg" type="text" placeholder="https://… (prázdné = barevný přechod)"></div>
@@ -160,7 +162,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--gold)}
         </div>
       </div>
       <div class="subcard">
-        <h3>Zájezdy (<span id="listCount">0</span>) · <span style="color:var(--gold-b)">★</span> = Top výběr</h3>
+        <h3>Zájezdy (<span id="listCount">0</span>) · <span style="color:var(--gold-b)">★</span> = zvýrazněno</h3>
         <div class="alist" id="adminList"></div>
         <div class="datatools">
           <button class="btn ghost" id="exportBtn">Export JSON</button>
@@ -190,7 +192,11 @@ input:focus,textarea:focus{outline:none;border-color:var(--gold)}
     </div>
     <div class="frow">
       <div class="field"><label>Odkaz pro QR kód</label><input id="sPageUrl" type="text" placeholder="https://www.lck.cz"></div>
-      <div class="field"><label>Střídání poutače (s)</label><input id="sRotate" type="text" inputmode="numeric" placeholder="8"></div>
+      <div class="field"><label>Střídání stránek (s)</label><input id="sRotate" type="text" inputmode="numeric" placeholder="9"></div>
+    </div>
+    <div class="frow">
+      <div class="field"><label>Sloupců na obrazovce</label><input id="sCols" type="text" inputmode="numeric" placeholder="3"></div>
+      <div class="field"><label>Karet na stránku</label><input id="sPerPage" type="text" inputmode="numeric" placeholder="9"></div>
     </div>
     <div class="btns"><button class="btn primary" id="saveSetBtn">Uložit nastavení</button></div>
     <div class="setmsg" id="setMsg"></div>
@@ -210,19 +216,23 @@ var DEFAULT_CONFIG = {
   tagline:"Zájezdy na míru · osobní přístup · vše osobně vyzkoušené",
   phone:"777 000 777", email:"cestovka@lckontakt.cz", web:"www.lck.cz",
   pageUrl:"https://www.lck.cz",
-  tickerText:"Léto 2026 v prodeji — rezervujte v klidu, poradíme osobně", rotateMs:8000
+  tickerText:"Léto 2026 v prodeji — rezervujte v klidu, poradíme osobně", rotateMs:8000, cols:3, perPage:9
 };
 var DEFAULT_DATA = [
-  {name:"Kréta",country:"Řecko",cats:["U moře"],term:"14.–21. 6. 2026",priceAdult:12490,priceChild:8990,dur:"8 dní",nights:7,lastmin:false,top:true,img:"",
-   highlights:["All inclusive přímo u moře","Přímé lety z Prahy","Ideální pro rodiny s dětmi"],desc:""},
-  {name:"Maledivy",country:"Indický oceán",cats:["Exotika"],term:"10.–18. 9. 2026",priceAdult:38990,priceChild:29990,dur:"9 dní",nights:7,lastmin:false,top:true,img:"",
-   highlights:["Bungalovy nad vodou","Špičkový snorkeling","Klid a soukromí"],desc:""},
-  {name:"Dubaj",country:"Emiráty",cats:["Exotika"],term:"3.–8. 7. 2026",priceAdult:19990,priceChild:14990,dur:"6 dní",nights:4,lastmin:true,top:true,img:"",
-   highlights:["Luxusní pláže a hotely","Pouštní safari","Skvělé nákupy"],desc:""},
-  {name:"Antalya",country:"Turecko",cats:["U moře"],term:"21.–28. 6. 2026",priceAdult:14990,priceChild:9990,dur:"8 dní",nights:7,lastmin:false,top:true,img:"",
-   highlights:["5* hotely all inclusive","Antické památky na dosah","Turecká riviéra"],desc:""},
-  {name:"Toskánsko",country:"Itálie",cats:["Poznávací"],term:"5.–11. 7. 2026",priceAdult:14990,priceChild:11990,dur:"7 dní",nights:6,lastmin:false,top:true,img:"",
-   highlights:["Florencie a Siena","Vinice a gastronomie","Průvodce v ceně"],desc:""}
+  {name:"Kréta",country:"Řecko",depart:"2026-06-14",term:"14.–21. 6. 2026",priceAdult:12490,priceChild:8990,dur:"8 dní",nights:7,lastmin:false,top:true,img:"",highlights:["All inclusive přímo u moře","Přímé lety z Prahy","Ideální pro rodiny"],cats:["U moře"],desc:""},
+  {name:"Antalya",country:"Turecko",depart:"2026-06-21",term:"21.–28. 6. 2026",priceAdult:14990,priceChild:9990,dur:"8 dní",nights:7,lastmin:false,top:false,img:"",highlights:["5* hotely all inclusive"],cats:["U moře"],desc:""},
+  {name:"Hurghada",country:"Egypt",depart:"2026-06-28",term:"28. 6.–5. 7. 2026",priceAdult:11490,priceChild:7990,dur:"8 dní",nights:7,lastmin:true,top:false,img:"",highlights:["Korálové útesy Rudého moře"],cats:["U moře"],desc:""},
+  {name:"Dubaj",country:"Emiráty",depart:"2026-07-03",term:"3.–8. 7. 2026",priceAdult:19990,priceChild:14990,dur:"6 dní",nights:4,lastmin:true,top:true,img:"",highlights:["Luxusní pláže a hotely","Pouštní safari","Skvělé nákupy"],cats:["Exotika"],desc:""},
+  {name:"Toskánsko",country:"Itálie",depart:"2026-07-05",term:"5.–11. 7. 2026",priceAdult:14990,priceChild:11990,dur:"7 dní",nights:6,lastmin:false,top:false,img:"",highlights:["Florencie, Siena, vinice"],cats:["Poznávací"],desc:""},
+  {name:"Slunečné pobřeží",country:"Bulharsko",depart:"2026-07-08",term:"8.–15. 7. 2026",priceAdult:9990,priceChild:6490,dur:"8 dní",nights:7,lastmin:true,top:false,img:"",highlights:["Mělké moře pro děti"],cats:["U moře"],desc:""},
+  {name:"Rhodos",country:"Řecko",depart:"2026-07-12",term:"12.–19. 7. 2026",priceAdult:13990,priceChild:9490,dur:"8 dní",nights:7,lastmin:false,top:false,img:"",highlights:["Staré město a pláže"],cats:["U moře"],desc:""},
+  {name:"Mallorca",country:"Španělsko",depart:"2026-07-15",term:"15.–22. 7. 2026",priceAdult:15990,priceChild:10990,dur:"8 dní",nights:7,lastmin:false,top:false,img:"",highlights:["Zátoky a rodinné hotely"],cats:["U moře"],desc:""},
+  {name:"Makarská",country:"Chorvatsko",depart:"2026-07-18",term:"18.–25. 7. 2026",priceAdult:10990,priceChild:7490,dur:"8 dní",nights:7,lastmin:false,top:false,img:"",highlights:["Čisté moře kousek autem"],cats:["U moře"],desc:""},
+  {name:"Řím",country:"Eurovíkend",depart:"2026-07-24",term:"24.–27. 7. 2026",priceAdult:6990,priceChild:4990,dur:"4 dní",nights:3,lastmin:false,top:false,img:"",highlights:["Koloseum a Vatikán"],cats:["Poznávací"],desc:""},
+  {name:"Djerba",country:"Tunisko",depart:"2026-08-02",term:"2.–9. 8. 2026",priceAdult:12990,priceChild:8490,dur:"8 dní",nights:7,lastmin:true,top:false,img:"",highlights:["Klidný ostrov, teplé moře"],cats:["U moře"],desc:""},
+  {name:"Zanzibar",country:"Tanzanie",depart:"2026-09-05",term:"5.–14. 9. 2026",priceAdult:31990,priceChild:24990,dur:"10 dní",nights:8,lastmin:false,top:false,img:"",highlights:["Bílý písek, lze i safari"],cats:["Exotika"],desc:""},
+  {name:"Maledivy",country:"Indický oceán",depart:"2026-09-10",term:"10.–18. 9. 2026",priceAdult:38990,priceChild:29990,dur:"9 dní",nights:7,lastmin:false,top:true,img:"",highlights:["Bungalovy nad vodou","Špičkový snorkeling","Klid a soukromí"],cats:["Exotika"],desc:""},
+  {name:"Lanzarote",country:"Kanárské ostrovy",depart:"2026-10-03",term:"3.–10. 10. 2026",priceAdult:16990,priceChild:11990,dur:"8 dní",nights:7,lastmin:false,top:false,img:"",highlights:["Slunce i na podzim"],cats:["U moře"],desc:""}
 ];
 
 var CONFIG=null, DATA=null, editIndex=-1, dirty=false;
@@ -254,6 +264,7 @@ function normItem(it){
   if(it.priceAdult==null){ it.priceAdult = it.price?it.price:0; }
   if(it.priceChild==null){ it.priceChild = 0; }
   if(it.term==null){ it.term = ""; }
+  if(it.depart==null){ it.depart = ""; }
   return it;
 }
 function normalizeData(){ var i; for(i=0;i<DATA.length;i++){ normItem(DATA[i]); } }
@@ -376,7 +387,7 @@ function rowAction(){
 }
 function fillForm(i){
   var it=DATA[i]; editIndex=i;
-  gv("fName",it.name); gv("fCountry",it.country); gv("fTerm",it.term||""); gv("fPriceA",it.priceAdult); gv("fPriceC",it.priceChild?it.priceChild:""); gv("fDur",it.dur); gv("fNights",it.nights);
+  gv("fName",it.name); gv("fCountry",it.country); gv("fDepart",it.depart||""); gv("fTerm",it.term||""); gv("fPriceA",it.priceAdult); gv("fPriceC",it.priceChild?it.priceChild:""); gv("fDur",it.dur); gv("fNights",it.nights);
   document.getElementById("fTop").checked=!!it.top; document.getElementById("fLastmin").checked=!!it.lastmin;
   gv("fHi",(it.highlights||[]).join("\n")); gv("fCats",(it.cats||[]).join(", ")); gv("fImg",it.img||""); gv("fDesc",it.desc||"");
   document.getElementById("formTitle").textContent="Upravit zájezd";
@@ -386,7 +397,7 @@ function fillForm(i){
 }
 function clearForm(){
   editIndex=-1;
-  gv("fName","");gv("fCountry","");gv("fTerm","");gv("fPriceA","");gv("fPriceC","");gv("fDur","");gv("fNights","");gv("fHi","");gv("fCats","");gv("fImg","");gv("fDesc","");
+  gv("fName","");gv("fCountry","");gv("fDepart","");gv("fTerm","");gv("fPriceA","");gv("fPriceC","");gv("fDur","");gv("fNights","");gv("fHi","");gv("fCats","");gv("fImg","");gv("fDesc","");
   document.getElementById("fTop").checked=false; document.getElementById("fLastmin").checked=false;
   document.getElementById("formTitle").textContent="Nový zájezd";
   document.getElementById("saveBtn").textContent="Přidat zájezd";
@@ -395,7 +406,7 @@ function clearForm(){
 function readForm(){
   var name=val("fName");
   if(!name){ alert("Vyplňte prosím název zájezdu."); document.getElementById("fName").focus(); return null; }
-  return { name:name, country:val("fCountry"), term:val("fTerm"), cats:parseCats(document.getElementById("fCats").value),
+  return { name:name, country:val("fCountry"), depart:val("fDepart"), term:val("fTerm"), cats:parseCats(document.getElementById("fCats").value),
     priceAdult:toNum(val("fPriceA")), priceChild:toNum(val("fPriceC")), dur:val("fDur"), nights:toNum(val("fNights")),
     top:document.getElementById("fTop").checked, lastmin:document.getElementById("fLastmin").checked,
     highlights:parseLines(document.getElementById("fHi").value), img:val("fImg"), desc:val("fDesc") };
@@ -431,11 +442,14 @@ function fillSettings(){
   gv("sAgency",CONFIG.agency); gv("sEyebrow",CONFIG.eyebrow); gv("sTagline",CONFIG.tagline);
   gv("sTicker",CONFIG.tickerText); gv("sPhone",CONFIG.phone); gv("sWeb",CONFIG.web);
   gv("sPageUrl",CONFIG.pageUrl); gv("sRotate", Math.round(CONFIG.rotateMs/1000));
+  gv("sCols", CONFIG.cols||4); gv("sPerPage", CONFIG.perPage||12);
 }
 function saveSettings(){
   CONFIG.agency=val("sAgency"); CONFIG.eyebrow=val("sEyebrow"); CONFIG.tagline=val("sTagline");
   CONFIG.tickerText=val("sTicker"); CONFIG.phone=val("sPhone"); CONFIG.web=val("sWeb"); CONFIG.pageUrl=val("sPageUrl");
   var sec=toNum(val("sRotate")); if(sec<4){ sec=4; } CONFIG.rotateMs=sec*1000;
+  var cols=toNum(val("sCols")); if(cols<1){ cols=1; } if(cols>8){ cols=8; } CONFIG.cols=cols;
+  var per=toNum(val("sPerPage")); if(per<1){ per=1; } CONFIG.perPage=per;
   markChanged();
   var m=document.getElementById("setMsg"); m.textContent="Uloženo do rozpracování ✓ — publikuj do výlohy nahoře."; setTimeout(function(){ m.textContent=""; },3000);
 }
