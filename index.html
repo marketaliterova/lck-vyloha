@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>LC Kontakt — výloha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   VÝLOHA — TV DISPLEJ (jen zobrazení, bez adminu)   verze e / 2026-07-08
+   Data se tahají z Gistu (admin.html je tam publikuje).
+   Adresa TV:  index.html?gist=<ID gistu>
+   Bez gistu jede na localStorage / ukázkových datech.
+   ============================================================ */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0A5250;--bg2:#0C605D;--surface:#12736E;--surface2:#1A928A;
+  --line:rgba(240,220,168,.30);--line-soft:rgba(243,238,227,.14);
+  --gold:#E0BC7C;--gold-b:#F4E0AC;--cream:#F5F1E7;--muted:#BFE3DF;
+  --shadow:0 24px 60px rgba(0,32,31,.45);--ink:#083836;
+}
+html,body{height:100%}
+body{background:
+  radial-gradient(1200px 700px at 82% -10%, rgba(224,188,124,.12), transparent 60%),
+  radial-gradient(900px 600px at 8% 110%, rgba(26,146,138,.42), transparent 55%),
+  var(--bg);
+  color:var(--cream);font-family:"Manrope",system-ui,Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+.stage{height:100vh;max-width:1760px;margin:0 auto;padding:26px 34px 66px;display:flex;flex-direction:column}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.brand{display:flex;flex-direction:column;gap:5px}
+.brand .eyebrow{font-size:12px;letter-spacing:.42em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.brand h1{font-family:"Fraunces",Georgia,serif;font-weight:400;font-size:40px;line-height:.98;letter-spacing:.5px;color:var(--cream)}
+.brand h1 em{font-style:italic;color:var(--gold-b)}
+.brand .tag{font-size:14px;color:var(--muted)}
+.clock{text-align:right;display:flex;flex-direction:column;gap:3px}
+.clock .t{font-family:"Fraunces",serif;font-size:32px;font-weight:500;color:var(--cream);letter-spacing:1px;font-variant-numeric:tabular-nums}
+.clock .d{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.board{flex:1;min-height:0;display:grid;grid-template-columns:.82fr 1.6fr;gap:26px;padding-top:22px}
+.tpanel{display:flex;flex-direction:column;min-height:0}
+.tpanel .thd{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px}
+.tpanel .thd .l{font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.tpanel .thd .s{font-size:12px;color:var(--muted)}
+.tlist{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+.trow{display:flex;align-items:center;gap:16px;padding:14px 18px;border-radius:16px;border:1px solid var(--line-soft);background:var(--surface);flex:1;min-height:0;transition:background .5s,border-color .5s,transform .5s,box-shadow .5s}
+.trow .num{font-family:"Fraunces",serif;font-size:22px;font-weight:500;color:var(--muted);width:34px;flex:none;font-variant-numeric:tabular-nums;transition:color .5s}
+.trow .ti{flex:1;min-width:0}
+.trow .tc{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trow .tn{font-family:"Fraunces",serif;font-size:23px;font-weight:500;color:var(--cream);line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.trow .tp{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:none}
+.trow .tp .pa{font-family:"Fraunces",serif;font-size:17px;color:var(--gold-b);white-space:nowrap}
+.trow .tp .pc{font-size:12px;color:var(--muted);white-space:nowrap}
+.trow.on{background:linear-gradient(100deg,var(--surface2),var(--surface));border-color:var(--gold);transform:translateX(6px);box-shadow:0 14px 34px rgba(0,26,25,.4)}
+.trow.on .num{color:var(--gold-b)}
+.tfoot{margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft);font-size:13px;color:var(--muted);line-height:1.7}
+.tfoot b{color:var(--gold-b);font-weight:600}
+.feat{position:relative;border-radius:24px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow);background:var(--surface)}
+.fbg{position:absolute;inset:0;background-size:cover;background-position:center;transform:scale(1.05);animation:fken 9s linear forwards}
+@keyframes fken{from{transform:scale(1.05) translate(0,0)}to{transform:scale(1.13) translate(-1.5%,-1%)}}
+.feat:after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(6,58,56,.12),rgba(6,58,56,.5) 42%,rgba(4,44,42,.94))}
+.fin{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:46px 52px 50px}
+.feyebrow{font-size:14px;letter-spacing:.36em;text-transform:uppercase;color:var(--gold);font-weight:600;opacity:0;animation:rise .8s .15s both}
+.fname{font-family:"Fraunces",serif;font-weight:500;font-size:74px;line-height:.96;color:var(--cream);margin:12px 0 20px;max-width:15ch;opacity:0;animation:rise .95s .3s both}
+.fname em{font-style:italic;color:var(--gold-b)}
+.fhi{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:26px;max-width:30ch;opacity:0;animation:rise 1s .45s both}
+.fhi li{position:relative;padding-left:34px;font-size:19px;line-height:1.35;color:#EAF3F1}
+.fhi li:before{content:"";position:absolute;left:0;top:2px;width:22px;height:22px;border-radius:50%;background:linear-gradient(180deg,var(--gold-b),var(--gold))}
+.fhi li:after{content:"";position:absolute;left:7px;top:9px;width:8px;height:4px;border-left:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(-45deg)}
+.fterm{display:inline-flex;align-items:center;gap:10px;font-size:16px;color:var(--gold-b);letter-spacing:.02em;margin-bottom:16px;opacity:0;animation:rise 1s .5s both}
+.fterm .lbl{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.fbottom{display:flex;align-items:flex-end;gap:34px;flex-wrap:wrap;opacity:0;animation:rise 1s .65s both}
+.fprices{display:flex;gap:36px;align-items:flex-end}
+.fp{display:flex;flex-direction:column;gap:3px}
+.fp .pl{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.fp .pv{font-family:"Fraunces",serif;color:var(--gold-b);font-size:22px;line-height:1}
+.fp .pv b{font-size:48px;font-weight:500}
+.fp.child .pv{color:var(--cream)}
+.fp.child .pv b{font-size:34px}
+.fmeta{font-size:15px;color:var(--muted);letter-spacing:.05em;padding-bottom:8px}
+@keyframes rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.flm{position:absolute;top:24px;left:26px;z-index:3;background:linear-gradient(180deg,var(--gold-b),var(--gold));color:var(--ink);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:7px 15px;border-radius:999px}
+.fqr{position:absolute;top:22px;right:24px;z-index:3;display:flex;align-items:center;gap:13px;background:rgba(6,58,56,.55);border:1px solid var(--line);border-radius:16px;padding:11px 15px}
+.fqr .q{width:66px;height:66px;background:#fff;border-radius:10px;padding:6px;flex:none}
+.fqr .q img{width:100%;height:100%;display:block}
+.fqr .qt{font-size:13px;color:var(--cream);line-height:1.4;max-width:110px}
+.fqr .qt b{color:var(--gold-b)}
+.fempty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px;color:var(--muted);font-size:18px;z-index:2}
+.ticker{position:fixed;left:0;right:0;bottom:0;z-index:62;height:46px;overflow:hidden;background:linear-gradient(180deg,#0c605c,#083f3d);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(0,26,25,.35);display:flex;align-items:center}
+.ticker.hide{display:none}
+.tk-track{display:inline-flex;align-items:center;white-space:nowrap;will-change:transform;animation:tkscroll linear infinite}
+@keyframes tkscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tk-item{display:inline-flex;align-items:center;gap:8px;font-size:15px;color:var(--cream);padding:0 4px}
+.tk-item b{color:var(--gold-b);font-weight:600}
+.tk-hot{display:inline-flex;align-items:center;font-family:"Fraunces",serif;font-size:16px;color:var(--gold-b);padding:0 4px}
+.tk-lm{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:linear-gradient(180deg,var(--gold-b),var(--gold));color:var(--ink);padding:3px 8px;border-radius:999px}
+.tk-child{color:var(--muted);font-size:13px}
+.tk-sep{color:var(--gold);opacity:.5;padding:0 18px;font-size:12px}
+.stat{position:fixed;left:10px;bottom:56px;z-index:63;width:9px;height:9px;border-radius:50%;background:#7bd6c8;opacity:.45;transition:.3s}
+.stat.off{background:#e6a15e;opacity:.85}
+@media(max-width:1000px){
+  body{overflow:auto}
+  .stage{height:auto;min-height:100vh;padding:22px 18px 60px}
+  .head{flex-direction:column;align-items:flex-start;gap:12px}.clock{text-align:left}
+  .brand h1{font-size:32px}
+  .board{grid-template-columns:1fr;gap:18px}
+  .feat{min-height:60vh;order:-1}.fname{font-size:48px}.fhi li{font-size:17px}.fp .pv b{font-size:38px}.fp.child .pv b{font-size:28px}
+  .trow{padding:12px 14px}.trow .tn{font-size:19px}
+  .ticker{height:42px}.tk-item{font-size:13px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.feyebrow,.fname,.fhi,.fbottom{opacity:1}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <header class="head">
+    <div class="brand">
+      <div class="eyebrow" id="bEyebrow">Cestovní kancelář</div>
+      <h1 id="bName">Kam <em>vás</em> to táhne?</h1>
+      <div class="tag" id="bTag"></div>
+    </div>
+    <div class="clock"><div class="t" id="clk">--:--</div><div class="d" id="dte"></div></div>
+  </header>
+  <div class="board">
+    <aside class="tpanel">
+      <div class="thd"><span class="l">Top výběr</span><span class="s">to nejlepší právě teď</span></div>
+      <div class="tlist" id="tlist"></div>
+      <div class="tfoot" id="tfoot"></div>
+    </aside>
+    <section class="feat" id="feat"></section>
+  </div>
+</div>
+<div class="ticker hide" id="ticker"><div class="tk-track" id="tkTrack"></div></div>
+<div class="stat" id="stat" title="stav připojení"></div>
+
+<script>
+/* ---- GIST (jen čtení) ---- */
+var GIST_ID = "";                 /* volitelně natvrdo; jinak ?gist=ID */
+var GIST_FILE = "lck_vyloha.json";
+var CACHE_KEY = "lck_vyloha_tv_cache_v1";
+var POLL_MS = 120000;             /* jak často kontrolovat gist (2 min) */
+
+function getGistId(){
+  var m = /[?&]gist=([^&]+)/.exec(location.search);
+  if(m){ return decodeURIComponent(m[1]); }
+  return GIST_ID || "";
+}
+
+/* ---- výchozí data (fallback, když není gist ani cache) ---- */
+var DEFAULT_CONFIG = {
+  agency:"Kam vás to táhne?", eyebrow:"LC Kontakt · Central Kladno · od 1993",
+  tagline:"Zájezdy na míru · osobní přístup · vše osobně vyzkoušené",
+  phone:"777 000 777", email:"cestovka@lckontakt.cz", web:"www.lck.cz",
+  pageUrl:"https://www.lck.cz",
+  tickerText:"Léto 2026 v prodeji — rezervujte v klidu, poradíme osobně", rotateMs:8000
+};
+var DEFAULT_DATA = [
+  {name:"Kréta",country:"Řecko",cats:["U moře"],term:"14.–21. 6. 2026",priceAdult:12490,priceChild:8990,dur:"8 dní",nights:7,lastmin:false,top:true,img:"",
+   highlights:["All inclusive přímo u moře","Přímé lety z Prahy","Ideální pro rodiny s dětmi"],desc:""},
+  {name:"Maledivy",country:"Indický oceán",cats:["Exotika"],term:"10.–18. 9. 2026",priceAdult:38990,priceChild:29990,dur:"9 dní",nights:7,lastmin:false,top:true,img:"",
+   highlights:["Bungalovy nad vodou","Špičkový snorkeling","Klid a soukromí"],desc:""},
+  {name:"Dubaj",country:"Emiráty",cats:["Exotika"],term:"3.–8. 7. 2026",priceAdult:19990,priceChild:14990,dur:"6 dní",nights:4,lastmin:true,top:true,img:"",
+   highlights:["Luxusní pláže a hotely","Pouštní safari","Skvělé nákupy"],desc:""},
+  {name:"Antalya",country:"Turecko",cats:["U moře"],term:"21.–28. 6. 2026",priceAdult:14990,priceChild:9990,dur:"8 dní",nights:7,lastmin:false,top:true,img:"",
+   highlights:["5* hotely all inclusive","Antické památky na dosah","Turecká riviéra"],desc:""},
+  {name:"Toskánsko",country:"Itálie",cats:["Poznávací"],term:"5.–11. 7. 2026",priceAdult:14990,priceChild:11990,dur:"7 dní",nights:6,lastmin:false,top:true,img:"",
+   highlights:["Florencie a Siena","Vinice a gastronomie","Průvodce v ceně"],desc:""}
+];
+
+var CONFIG = clone(DEFAULT_CONFIG);
+var DATA = clone(DEFAULT_DATA);
+var boardList = [], activeTop = 0, rotateTimer = null, tickerEmpty = true;
+
+function clone(x){ return JSON.parse(JSON.stringify(x)); }
+function mergeConfig(src){ var o=clone(DEFAULT_CONFIG),k; if(src){ for(k in src){ if(src.hasOwnProperty(k)){ o[k]=src[k]; } } } return o; }
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function trimStr(s){ return String(s==null?"":s).replace(/^\s+|\s+$/g,""); }
+function money(n){ var s=String(n),o="",c=0,i; for(i=s.length-1;i>=0;i--){ o=s.charAt(i)+o;c++; if(c%3===0&&i>0){o=" "+o;} } return o; }
+var GRADS=[
+  "linear-gradient(150deg,#0d6b66,#17a79b 48%,#e0bc7c)","linear-gradient(150deg,#0f6f6a,#1fb8ad 52%,#f4e0ac)",
+  "linear-gradient(150deg,#0c6460,#1a9a90 46%,#d8a15e)","linear-gradient(150deg,#12706a,#2ab3a5 50%,#e0bc7c)",
+  "linear-gradient(150deg,#0d6560,#189c92 48%,#e0b878)","linear-gradient(150deg,#0e6a64,#1aa89c 46%,#caa267)"];
+function bgFor(it,i){ if(it.img){ var u=String(it.img).replace(/'/g,"%27").replace(/"/g,"%22"); return "url('"+u+"')"; } return GRADS[i%GRADS.length]; }
+function qrUrl(size){ return "https://api.qrserver.com/v1/create-qr-code/?size="+size+"x"+size+"&margin=0&color=083836&bgcolor=ffffff&data="+encodeURIComponent(CONFIG.pageUrl); }
+
+/* ---- render ---- */
+function applyConfig(){
+  document.getElementById("bName").innerHTML = esc(CONFIG.agency).replace("vás","<em>vás</em>");
+  document.getElementById("bEyebrow").textContent = CONFIG.eyebrow;
+  document.getElementById("bTag").textContent = CONFIG.tagline;
+  document.getElementById("tfoot").innerHTML = "Rádi poradíme osobně<br><b>"+esc(CONFIG.phone)+"</b> · "+esc(CONFIG.web);
+}
+function getTopList(){
+  var t=[],i; for(i=0;i<DATA.length;i++){ if(DATA[i].top){ t.push(DATA[i]); } }
+  if(t.length===0){ for(i=0;i<DATA.length&&i<5;i++){ t.push(DATA[i]); } }
+  if(t.length>6){ t=t.slice(0,6); } return t;
+}
+function renderTopList(){
+  var box=document.getElementById("tlist"),h="",i,it,num;
+  for(i=0;i<boardList.length;i++){ it=boardList[i]; num=(i+1<10?"0":"")+(i+1);
+    h+='<div class="trow'+(i===activeTop?' on':'')+'"><div class="num">'+num+'</div>'+
+       '<div class="ti"><div class="tc">'+esc(it.country)+(it.lastmin?' · Last minute':'')+'</div>'+
+       '<div class="tn">'+esc(it.name)+'</div></div>'+
+       '<div class="tp"><span class="pa">'+money(it.priceAdult)+' Kč</span>'+
+       (it.priceChild>0?'<span class="pc">dítě '+money(it.priceChild)+' Kč</span>':'')+'</div></div>'; }
+  box.innerHTML=h;
+}
+function renderFeatured(){
+  var host=document.getElementById("feat");
+  if(boardList.length===0){ host.innerHTML='<div class="fempty">Zatím žádné zájezdy v Top výběru.</div>'; return; }
+  var it=boardList[activeTop];
+  var hs=(it.highlights&&it.highlights.length)?it.highlights.slice(0,4):[];
+  var b="",j; for(j=0;j<hs.length;j++){ b+='<li>'+esc(hs[j])+'</li>'; }
+  host.innerHTML=
+    '<div class="fbg" style="background-image:'+bgFor(it,activeTop)+'"></div>'+
+    (it.lastmin?'<div class="flm">Last minute</div>':'')+
+    '<div class="fqr"><div class="q"><img src="'+qrUrl(160)+'" alt="QR"></div>'+
+      '<div class="qt"><b>Celá nabídka</b><br>naskenujte v mobilu</div></div>'+
+    '<div class="fin"><div class="feyebrow">'+esc(it.country)+'</div>'+
+      '<div class="fname">'+esc(it.name)+'</div>'+
+      (b?'<ul class="fhi">'+b+'</ul>':'')+
+      (it.term?'<div class="fterm"><span class="lbl">Termín</span> '+esc(it.term)+'</div>':'')+
+      '<div class="fbottom"><div class="fprices">'+
+        '<div class="fp"><span class="pl">Dospělý</span><span class="pv"><b>'+money(it.priceAdult)+'</b> Kč</span></div>'+
+        (it.priceChild>0?'<div class="fp child"><span class="pl">Dítě</span><span class="pv"><b>'+money(it.priceChild)+'</b> Kč</span></div>':'')+
+      '</div><div class="fmeta">'+esc(it.dur)+' · '+esc(it.nights)+' nocí</div></div></div>';
+}
+function renderBoard(){ boardList=getTopList(); if(activeTop>=boardList.length){ activeTop=0; } renderTopList(); renderFeatured(); }
+function boardStep(){ if(boardList.length<=1){ return; } activeTop=(activeTop+1)%boardList.length; renderTopList(); renderFeatured(); }
+function startRotate(){ if(rotateTimer){ clearInterval(rotateTimer); } rotateTimer=setInterval(boardStep, CONFIG.rotateMs); }
+
+function updateTickerVisibility(){ document.getElementById("ticker").className="ticker"+(tickerEmpty?" hide":""); }
+function buildTicker(){
+  var items=[],i,it,hot=trimStr(CONFIG.tickerText);
+  if(hot){ items.push('<span class="tk-hot">'+esc(hot)+'</span>'); }
+  for(i=0;i<DATA.length;i++){ it=DATA[i];
+    items.push('<span class="tk-item">'+(it.lastmin?'<span class="tk-lm">Last minute</span> ':'')+
+      esc(it.country)+' · '+esc(it.name)+' <b>'+money(it.priceAdult)+' Kč</b>'+
+      (it.priceChild>0?' <span class="tk-child">/ dítě '+money(it.priceChild)+' Kč</span>':'')+'</span>'); }
+  var track=document.getElementById("tkTrack");
+  if(items.length===0){ tickerEmpty=true; track.innerHTML=""; updateTickerVisibility(); return; }
+  tickerEmpty=false;
+  var sep='<span class="tk-sep">&#10022;</span>', one=items.join(sep)+sep;
+  track.innerHTML=one+one;
+  var dur=items.length*9; if(dur<28){ dur=28; } track.style.animationDuration=dur+"s";
+  updateTickerVisibility();
+}
+
+var DAYS=["neděle","pondělí","úterý","středa","čtvrtek","pátek","sobota"];
+var MONTHS=["ledna","února","března","dubna","května","června","července","srpna","září","října","listopadu","prosince"];
+function tick(){ var d=new Date(); function p(n){return n<10?"0"+n:""+n;}
+  document.getElementById("clk").textContent=p(d.getHours())+":"+p(d.getMinutes());
+  document.getElementById("dte").textContent=DAYS[d.getDay()]+" · "+d.getDate()+". "+MONTHS[d.getMonth()]; }
+
+function renderAll(){ applyConfig(); renderBoard(); buildTicker(); }
+
+/* ---- cache ---- */
+function saveCache(payload){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify(payload)); }catch(e){} }
+function loadCache(){ try{ var r=localStorage.getItem(CACHE_KEY); if(r){ return JSON.parse(r); } }catch(e){} return null; }
+function normItem(it){
+  if(it.priceAdult==null){ it.priceAdult = it.price?it.price:0; }
+  if(it.priceChild==null){ it.priceChild = 0; }
+  if(it.term==null){ it.term = ""; }
+  return it;
+}
+function normalizeData(){ var i; for(i=0;i<DATA.length;i++){ normItem(DATA[i]); } }
+function applyPayload(p){ if(p && p.data && p.data.length!==undefined){ DATA=p.data; CONFIG=mergeConfig(p.config); normalizeData(); return true; } return false; }
+function setStat(online){ document.getElementById("stat").className="stat"+(online?"":" off"); }
+
+/* ---- gist ---- */
+function fetchGist(id, cb){
+  var xhr=new XMLHttpRequest();
+  xhr.open("GET","https://api.github.com/gists/"+id,true);
+  xhr.setRequestHeader("Accept","application/vnd.github+json");
+  xhr.onreadystatechange=function(){
+    if(xhr.readyState!==4){ return; }
+    if(xhr.status>=200 && xhr.status<300){
+      try{ var g=JSON.parse(xhr.responseText); var f=g.files&&g.files[GIST_FILE];
+        if(f&&f.content){ cb(null, JSON.parse(f.content)); return; }
+        cb(new Error("chybí soubor")); }catch(e){ cb(e); }
+    } else { cb(new Error("HTTP "+xhr.status)); }
+  };
+  xhr.onerror=function(){ cb(new Error("síť")); };
+  xhr.send();
+}
+var lastRaw="";
+function refreshFromGist(id){
+  fetchGist(id, function(err, payload){
+    if(err){ setStat(false); return; }
+    var raw=JSON.stringify(payload);
+    setStat(true);
+    if(raw===lastRaw){ return; }
+    lastRaw=raw;
+    if(applyPayload(payload)){ saveCache(payload); if(activeTop>=getTopList().length){ activeTop=0; } renderAll(); startRotate(); }
+  });
+}
+
+/* ---- init ---- */
+function init(){
+  var cached=loadCache();
+  if(cached && applyPayload(cached)){ lastRaw=JSON.stringify(cached); }
+  renderAll();
+  tick(); setInterval(tick,15000);
+  startRotate();
+  var id=getGistId();
+  if(id){ refreshFromGist(id); setInterval(function(){ refreshFromGist(id); }, POLL_MS); }
+  else { setStat(true); }
+}
+init();
+</script>
+</body>
+</html>

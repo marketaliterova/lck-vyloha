@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Výloha LCK — admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   VÝLOHA LCK — ADMIN (editor)   verze e / 2026-07-08
+   Upravuje zájezdy + nastavení a PUBLIKUJE data do Gistu.
+   TV (index.html) si gist sama načítá.
+   Token zadáváš tady, uloží se jen v tomto prohlížeči. Nikam ho neposílej.
+   ============================================================ */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0A5250;--bg2:#0C605D;--surface:#12736E;
+  --line:rgba(240,220,168,.30);--line-soft:rgba(243,238,227,.14);
+  --gold:#E0BC7C;--gold-b:#F4E0AC;--cream:#F5F1E7;--muted:#BFE3DF;
+  --shadow:0 24px 60px rgba(0,32,31,.45);--ink:#083836;
+  --ok:#7bd6c8;--warn:#e6a15e;--err:#f0b7ae;
+}
+html,body{height:100%}
+body{background:
+  radial-gradient(1000px 600px at 90% -10%, rgba(224,188,124,.10), transparent 60%),
+  radial-gradient(800px 500px at 0% 110%, rgba(26,146,138,.35), transparent 55%),
+  var(--bg);
+  color:var(--cream);font-family:"Manrope",system-ui,Arial,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+.page{max-width:1120px;margin:0 auto;padding:28px 22px 60px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.top h1{font-family:"Fraunces",serif;font-weight:500;font-size:28px;color:var(--cream)}
+.top h1 small{display:block;font-family:"Manrope",sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-top:5px}
+.dirty{font-size:12px;font-weight:700;letter-spacing:.04em;padding:8px 14px;border-radius:999px;border:1px solid var(--line-soft);color:var(--muted)}
+.dirty.on{color:var(--ink);background:linear-gradient(180deg,var(--gold-b),var(--gold));border-color:transparent}
+
+.card{background:var(--bg2);border:1px solid var(--line-soft);border-radius:18px;padding:22px;margin-bottom:20px}
+.card h2{font-family:"Fraunces",serif;font-weight:500;font-size:21px;color:var(--cream);margin-bottom:6px}
+.card .lead{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6}
+.card .lead b{color:var(--gold-b)}
+
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.frow.three{grid-template-columns:1fr 1fr 1fr}
+.field{margin-bottom:14px}
+.field.full{grid-column:1/-1}
+label{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+input,textarea{width:100%;font-family:inherit;font-size:15px;color:var(--cream);background:rgba(0,0,0,.22);border:1px solid var(--line-soft);border-radius:10px;padding:11px 13px}
+textarea{min-height:92px;resize:vertical;line-height:1.5}
+input:focus,textarea:focus{outline:none;border-color:var(--gold)}
+.hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+.hint a{color:var(--gold-b)}
+.checks{display:flex;gap:26px;flex-wrap:wrap;margin-bottom:14px}
+.checkrow{display:flex;align-items:center;gap:10px}
+.checkrow input{width:20px;height:20px;accent-color:var(--gold)}
+.checkrow span{font-size:14px;color:var(--cream)}
+
+.btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;align-items:center}
+.btn{appearance:none;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:.03em;padding:12px 20px;border-radius:12px;cursor:pointer;transition:.2s;border:1px solid transparent}
+.btn.primary{background:linear-gradient(180deg,var(--gold-b),var(--gold));color:var(--ink)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;border-color:var(--line);color:var(--cream)}
+.btn.ghost:hover{border-color:var(--gold);color:var(--gold-b)}
+.btn.danger{background:transparent;border-color:rgba(224,120,110,.5);color:var(--err)}
+.btn.danger:hover{background:rgba(224,120,110,.14)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.sp{flex:1}
+.status{font-size:13px;margin-top:12px;min-height:18px;color:var(--muted)}
+.status.ok{color:var(--ok)} .status.warn{color:var(--warn)} .status.err{color:var(--err)}
+.tvurl{margin-top:12px;font-size:13px;color:var(--muted);word-break:break-all}
+.tvurl b{color:var(--gold-b)}
+
+.tabs{display:flex;gap:10px;margin-bottom:16px}
+.tab{appearance:none;border:1px solid var(--line-soft);background:transparent;color:var(--muted);font-family:inherit;font-size:13px;font-weight:600;letter-spacing:.06em;padding:9px 18px;border-radius:999px;cursor:pointer;transition:.2s}
+.tab:hover{color:var(--gold-b);border-color:var(--gold)}
+.tab.on{background:linear-gradient(180deg,var(--gold-b),var(--gold));color:var(--ink);border-color:transparent}
+
+.acols{display:grid;grid-template-columns:1.05fr .95fr;gap:22px}
+.subcard{background:rgba(0,0,0,.14);border:1px solid var(--line-soft);border-radius:14px;padding:18px}
+.subcard h3{font-family:"Fraunces",serif;font-weight:500;font-size:19px;color:var(--cream);margin-bottom:14px}
+.alist{max-height:520px;overflow:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px}
+.al-row{display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.16);border:1px solid var(--line-soft);border-radius:12px;padding:12px 14px}
+.al-main{flex:1;min-width:0}
+.al-name{font-family:"Fraunces",serif;font-size:18px;color:var(--cream);display:flex;align-items:center;gap:8px}
+.al-star{color:var(--gold-b);font-size:15px}
+.al-lm{font-family:"Manrope",sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;background:linear-gradient(180deg,var(--gold-b),var(--gold));color:var(--ink);padding:2px 7px;border-radius:999px}
+.al-sub{font-size:13px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.al-acts{display:flex;gap:6px;flex:none}
+.al-btn{appearance:none;font-family:inherit;font-size:12px;font-weight:600;border:1px solid var(--line-soft);background:transparent;color:var(--muted);border-radius:8px;padding:7px 9px;cursor:pointer;transition:.2s;line-height:1}
+.al-btn:hover{border-color:var(--gold);color:var(--gold-b)}
+.al-btn.del:hover{border-color:rgba(224,120,110,.6);color:var(--err)}
+.al-empty{color:var(--muted);text-align:center;padding:36px 0;font-size:15px}
+.datatools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:18px;padding-top:18px;border-top:1px solid var(--line-soft)}
+.setmsg{font-size:13px;color:var(--gold-b);min-height:18px;margin-top:10px}
+@media(max-width:820px){ .acols{grid-template-columns:1fr}.frow,.frow.three{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top">
+    <h1>Výloha LCK — admin<small>editor zájezdů · publikuje do výlohy</small></h1>
+    <div class="dirty" id="dirty">Uloženo</div>
+  </div>
+
+  <!-- PŘIPOJENÍ -->
+  <div class="card">
+    <h2>Připojení k výloze (Gist)</h2>
+    <div class="lead">Token zadáváš jen tady — uloží se pouze v tomto prohlížeči, <b>nikam se neposílá</b>. Potřebuje oprávnění <b>gist</b>. Vytvoříš ho na <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">github.com → Settings → Developer settings → Tokens</a>.</div>
+    <div class="frow">
+      <div class="field"><label>GitHub token (scope: gist)</label><input id="cfgToken" type="password" placeholder="ghp_…" autocomplete="off"></div>
+      <div class="field"><label>ID gistu</label><input id="cfgGist" type="text" placeholder="prázdné = vytvořím nový" autocomplete="off"></div>
+    </div>
+    <div class="btns">
+      <button class="btn ghost" id="btnConnect">Načíst z výlohy</button>
+      <button class="btn ghost" id="btnCreate">Vytvořit nový gist</button>
+      <span class="sp"></span>
+      <button class="btn primary" id="btnPublish">Publikovat do výlohy</button>
+    </div>
+    <div class="status" id="connStatus"></div>
+    <div class="tvurl" id="tvUrl"></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" id="tbZ">Zájezdy</button>
+    <button class="tab" id="tbN">Nastavení výlohy</button>
+  </div>
+
+  <!-- ZÁJEZDY -->
+  <div class="card" id="tabZajezdy">
+    <div class="acols">
+      <div class="subcard" id="adminForm">
+        <h3 id="formTitle">Nový zájezd</h3>
+        <div class="field full"><label>Název zájezdu *</label><input id="fName" type="text" placeholder="např. Kréta"></div>
+        <div class="frow">
+          <div class="field"><label>Země / štítek</label><input id="fCountry" type="text" placeholder="Řecko"></div>
+          <div class="field"><label>Termín</label><input id="fTerm" type="text" placeholder="14.–21. 6. 2026"></div>
+        </div>
+        <div class="frow">
+          <div class="field"><label>Cena dospělý (Kč)</label><input id="fPriceA" type="text" inputmode="numeric" placeholder="12490"></div>
+          <div class="field"><label>Cena dítě (Kč)</label><input id="fPriceC" type="text" inputmode="numeric" placeholder="8990 (prázdné = neuvádět)"></div>
+        </div>
+        <div class="frow">
+          <div class="field"><label>Délka</label><input id="fDur" type="text" placeholder="8 dní"></div>
+          <div class="field"><label>Počet nocí</label><input id="fNights" type="text" inputmode="numeric" placeholder="7"></div>
+        </div>
+        <div class="checks">
+          <div class="checkrow"><input id="fTop" type="checkbox"><span>Top výběr (levý přehled)</span></div>
+          <div class="checkrow"><input id="fLastmin" type="checkbox"><span>Štítek Last minute</span></div>
+        </div>
+        <div class="field full"><label>Body — co je super (každý na nový řádek)</label>
+          <textarea id="fHi" placeholder="All inclusive u moře&#10;Přímé lety z Prahy&#10;Ideální pro rodiny"></textarea>
+          <div class="hint">Vpravo se zobrazí jako odrážky se zaškrtnutím. Ideálně 3.</div>
+        </div>
+        <div class="field full"><label>Kategorie (oddělte čárkou)</label><input id="fCats" type="text" placeholder="U moře, Poznávací"></div>
+        <div class="field full"><label>Foto — URL</label><input id="fImg" type="text" placeholder="https://… (prázdné = barevný přechod)"></div>
+        <div class="field full"><label>Popis (nepovinné)</label><textarea id="fDesc" placeholder="Krátký popis…"></textarea></div>
+        <div class="btns">
+          <button class="btn primary" id="saveBtn">Přidat zájezd</button>
+          <button class="btn ghost" id="cancelBtn" style="display:none">Zrušit úpravu</button>
+        </div>
+      </div>
+      <div class="subcard">
+        <h3>Zájezdy (<span id="listCount">0</span>) · <span style="color:var(--gold-b)">★</span> = Top výběr</h3>
+        <div class="alist" id="adminList"></div>
+        <div class="datatools">
+          <button class="btn ghost" id="exportBtn">Export JSON</button>
+          <label class="btn ghost" for="importFile" style="display:inline-block">Import JSON</label>
+          <input id="importFile" type="file" accept="application/json,.json" style="display:none">
+          <span class="sp"></span>
+          <button class="btn danger" id="resetBtn">Ukázková data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NASTAVENÍ -->
+  <div class="card" id="tabNastaveni" style="display:none">
+    <h2>Texty a kontakt</h2>
+    <div class="field full"><label>Velký nadpis</label><input id="sAgency" type="text">
+      <div class="hint">Ponecháte-li slovo „vás“, zvýrazní se zlatě.</div></div>
+    <div class="frow">
+      <div class="field"><label>Malý text nad nadpisem</label><input id="sEyebrow" type="text"></div>
+      <div class="field"><label>Podtitulek</label><input id="sTagline" type="text"></div>
+    </div>
+    <div class="field full"><label>Běžící lišta — zvýrazněný text</label><input id="sTicker" type="text" placeholder="např. Léto 2026 v prodeji">
+      <div class="hint">Zlatě na začátku lišty, za ním se scrollují zájezdy. Prázdné = jen zájezdy.</div></div>
+    <div class="frow">
+      <div class="field"><label>Telefon</label><input id="sPhone" type="text"></div>
+      <div class="field"><label>Web</label><input id="sWeb" type="text"></div>
+    </div>
+    <div class="frow">
+      <div class="field"><label>Odkaz pro QR kód</label><input id="sPageUrl" type="text" placeholder="https://www.lck.cz"></div>
+      <div class="field"><label>Střídání poutače (s)</label><input id="sRotate" type="text" inputmode="numeric" placeholder="8"></div>
+    </div>
+    <div class="btns"><button class="btn primary" id="saveSetBtn">Uložit nastavení</button></div>
+    <div class="setmsg" id="setMsg"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   KONFIGURACE
+   ============================================================ */
+var GIST_FILE = "lck_vyloha.json";
+var CFG_KEY   = "lck_admin_cfg_v1";     /* {gistId, token} – jen v tomto prohlížeči */
+var LOCAL_KEY = "lck_admin_data_v1";    /* pracovní kopie dat */
+
+var DEFAULT_CONFIG = {
+  agency:"Kam vás to táhne?", eyebrow:"LC Kontakt · Central Kladno · od 1993",
+  tagline:"Zájezdy na míru · osobní přístup · vše osobně vyzkoušené",
+  phone:"777 000 777", email:"cestovka@lckontakt.cz", web:"www.lck.cz",
+  pageUrl:"https://www.lck.cz",
+  tickerText:"Léto 2026 v prodeji — rezervujte v klidu, poradíme osobně", rotateMs:8000
+};
+var DEFAULT_DATA = [
+  {name:"Kréta",country:"Řecko",cats:["U moře"],term:"14.–21. 6. 2026",priceAdult:12490,priceChild:8990,dur:"8 dní",nights:7,lastmin:false,top:true,img:"",
+   highlights:["All inclusive přímo u moře","Přímé lety z Prahy","Ideální pro rodiny s dětmi"],desc:""},
+  {name:"Maledivy",country:"Indický oceán",cats:["Exotika"],term:"10.–18. 9. 2026",priceAdult:38990,priceChild:29990,dur:"9 dní",nights:7,lastmin:false,top:true,img:"",
+   highlights:["Bungalovy nad vodou","Špičkový snorkeling","Klid a soukromí"],desc:""},
+  {name:"Dubaj",country:"Emiráty",cats:["Exotika"],term:"3.–8. 7. 2026",priceAdult:19990,priceChild:14990,dur:"6 dní",nights:4,lastmin:true,top:true,img:"",
+   highlights:["Luxusní pláže a hotely","Pouštní safari","Skvělé nákupy"],desc:""},
+  {name:"Antalya",country:"Turecko",cats:["U moře"],term:"21.–28. 6. 2026",priceAdult:14990,priceChild:9990,dur:"8 dní",nights:7,lastmin:false,top:true,img:"",
+   highlights:["5* hotely all inclusive","Antické památky na dosah","Turecká riviéra"],desc:""},
+  {name:"Toskánsko",country:"Itálie",cats:["Poznávací"],term:"5.–11. 7. 2026",priceAdult:14990,priceChild:11990,dur:"7 dní",nights:6,lastmin:false,top:true,img:"",
+   highlights:["Florencie a Siena","Vinice a gastronomie","Průvodce v ceně"],desc:""}
+];
+
+var CONFIG=null, DATA=null, editIndex=-1, dirty=false;
+
+function clone(x){ return JSON.parse(JSON.stringify(x)); }
+function mergeConfig(src){ var o=clone(DEFAULT_CONFIG),k; if(src){ for(k in src){ if(src.hasOwnProperty(k)){ o[k]=src[k]; } } } return o; }
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function trimStr(s){ return String(s==null?"":s).replace(/^\s+|\s+$/g,""); }
+function toNum(v){ var s=String(v==null?"":v).replace(/[^0-9]/g,""); return s?parseInt(s,10):0; }
+function parseCats(str){ var p=String(str==null?"":str).split(","),o=[],i,c; for(i=0;i<p.length;i++){ c=trimStr(p[i]); if(c){o.push(c);} } if(o.length===0){o=["Ostatní"];} return o; }
+function parseLines(str){ var p=String(str==null?"":str).split(/\r?\n/),o=[],i,c; for(i=0;i<p.length;i++){ c=trimStr(p[i]); if(c){o.push(c);} } return o; }
+function money(n){ var s=String(n),o="",c=0,i; for(i=s.length-1;i>=0;i--){ o=s.charAt(i)+o;c++; if(c%3===0&&i>0){o=" "+o;} } return o; }
+function stamp(){ var d=new Date(); function p(n){return n<10?"0"+n:""+n;} return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes()); }
+function gv(id,v){ document.getElementById(id).value=(v==null?"":v); }
+function val(id){ return trimStr(document.getElementById(id).value); }
+
+/* ---- lokální kopie ---- */
+function saveLocal(){ try{ localStorage.setItem(LOCAL_KEY, JSON.stringify({data:DATA,config:CONFIG})); }catch(e){} }
+function loadLocal(){ try{ var r=localStorage.getItem(LOCAL_KEY); if(r){ var o=JSON.parse(r); if(o&&o.data){ return o; } } }catch(e){} return null; }
+function loadCfg(){ try{ var r=localStorage.getItem(CFG_KEY); if(r){ return JSON.parse(r); } }catch(e){} return {gistId:"",token:""}; }
+function saveCfg(){ try{ localStorage.setItem(CFG_KEY, JSON.stringify({gistId:val("cfgGist"),token:val("cfgToken")})); }catch(e){} }
+
+function setDirty(on){ dirty=on; var d=document.getElementById("dirty"); d.className="dirty"+(on?" on":""); d.textContent=on?"Neuloženo do výlohy":"Uloženo"; }
+function markChanged(){ saveLocal(); setDirty(true); }
+
+/* ---- payload ---- */
+function payload(){ return {data:DATA, config:CONFIG}; }
+function normItem(it){
+  if(it.priceAdult==null){ it.priceAdult = it.price?it.price:0; }
+  if(it.priceChild==null){ it.priceChild = 0; }
+  if(it.term==null){ it.term = ""; }
+  return it;
+}
+function normalizeData(){ var i; for(i=0;i<DATA.length;i++){ normItem(DATA[i]); } }
+function applyPayload(p){ if(p&&p.data&&p.data.length!==undefined){ DATA=p.data; CONFIG=mergeConfig(p.config); normalizeData(); return true; } return false; }
+
+/* ============================================================
+   GITHUB GIST API
+   ============================================================ */
+function ghReq(method, url, token, body, cb){
+  var xhr=new XMLHttpRequest();
+  xhr.open(method, url, true);
+  xhr.setRequestHeader("Accept","application/vnd.github+json");
+  if(token){ xhr.setRequestHeader("Authorization","token "+token); }
+  if(body){ xhr.setRequestHeader("Content-Type","application/json"); }
+  xhr.onreadystatechange=function(){
+    if(xhr.readyState!==4){ return; }
+    if(xhr.status>=200 && xhr.status<300){
+      try{ cb(null, JSON.parse(xhr.responseText)); }catch(e){ cb(e); }
+    } else {
+      var msg="HTTP "+xhr.status;
+      try{ var j=JSON.parse(xhr.responseText); if(j&&j.message){ msg=j.message; } }catch(e){}
+      cb(new Error(msg));
+    }
+  };
+  xhr.onerror=function(){ cb(new Error("Chyba sítě")); };
+  xhr.send(body?JSON.stringify(body):null);
+}
+function gistGet(id, token, cb){
+  ghReq("GET","https://api.github.com/gists/"+id, token, null, function(err,g){
+    if(err){ cb(err); return; }
+    var f=g.files&&g.files[GIST_FILE];
+    if(f&&f.content){ try{ cb(null, JSON.parse(f.content)); }catch(e){ cb(new Error("Gist má neplatný JSON")); } }
+    else { cb(new Error("V gistu chybí "+GIST_FILE)); }
+  });
+}
+function gistCreate(token, data, cb){
+  var files={}; files[GIST_FILE]={content:JSON.stringify(data,null,2)};
+  ghReq("POST","https://api.github.com/gists", token, {description:"LC Kontakt — výloha (data)", public:false, files:files}, function(err,g){
+    if(err){ cb(err); return; } cb(null, g.id);
+  });
+}
+function gistPatch(id, token, data, cb){
+  var files={}; files[GIST_FILE]={content:JSON.stringify(data,null,2)};
+  ghReq("PATCH","https://api.github.com/gists/"+id, token, {files:files}, function(err){ cb(err); });
+}
+
+/* ---- stavové hlášky ---- */
+function conn(msg, kind){ var el=document.getElementById("connStatus"); el.className="status"+(kind?" "+kind:""); el.textContent=msg||""; }
+function showTvUrl(id){
+  var base=location.href.replace(/admin\.html.*$/,"").replace(/[^\/]*$/,"");
+  var url=base+"index.html?gist="+id;
+  document.getElementById("tvUrl").innerHTML = "Adresa pro TV: <b>"+esc(url)+"</b>";
+}
+
+/* ---- akce připojení ---- */
+function doConnect(){
+  var id=val("cfgGist"), token=val("cfgToken");
+  saveCfg();
+  if(!id){ conn("Zadejte ID gistu, nebo vytvořte nový.","warn"); return; }
+  conn("Načítám z výlohy…");
+  gistGet(id, token, function(err, data){
+    if(err){ conn("Nepovedlo se načíst: "+err.message, "err"); return; }
+    applyPayload(data); saveLocal(); setDirty(false);
+    renderList(); fillSettings(); clearForm(); showTvUrl(id);
+    conn("Načteno z výlohy ("+DATA.length+" zájezdů).","ok");
+  });
+}
+function doCreate(){
+  var token=val("cfgToken");
+  if(!token){ conn("Pro vytvoření gistu je potřeba token (scope gist).","warn"); document.getElementById("cfgToken").focus(); return; }
+  conn("Vytvářím gist…");
+  gistCreate(token, payload(), function(err, id){
+    if(err){ conn("Nepovedlo se vytvořit: "+err.message, "err"); return; }
+    gv("cfgGist", id); saveCfg(); setDirty(false); showTvUrl(id);
+    conn("Gist vytvořen a data nahrána. Zkopírujte adresu pro TV níže.","ok");
+  });
+}
+function doPublish(){
+  var id=val("cfgGist"), token=val("cfgToken");
+  saveCfg();
+  if(!token){ conn("Pro publikování je potřeba token.","warn"); document.getElementById("cfgToken").focus(); return; }
+  if(!id){ doCreate(); return; }
+  conn("Publikuji do výlohy…");
+  gistPatch(id, token, payload(), function(err){
+    if(err){ conn("Publikování selhalo: "+err.message, "err"); return; }
+    setDirty(false); showTvUrl(id);
+    conn("Publikováno do výlohy ✓ (TV se aktualizuje do 2 minut).","ok");
+  });
+}
+
+/* ============================================================
+   EDITOR ZÁJEZDŮ
+   ============================================================ */
+function renderList(){
+  var box=document.getElementById("adminList");
+  document.getElementById("listCount").textContent=DATA.length;
+  if(DATA.length===0){ box.innerHTML='<div class="al-empty">Zatím žádné zájezdy. Přidejte první vlevo.</div>'; return; }
+  var h="",i,it;
+  for(i=0;i<DATA.length;i++){ it=DATA[i];
+    h+='<div class="al-row"><div class="al-main">'+
+       '<div class="al-name">'+(it.top?'<span class="al-star">&#9733;</span> ':'')+esc(it.name)+(it.lastmin?' <span class="al-lm">LM</span>':'')+'</div>'+
+       '<div class="al-sub">'+esc(it.country)+(it.term?' · '+esc(it.term):'')+' · dosp. '+money(it.priceAdult)+' Kč'+(it.priceChild>0?' · dítě '+money(it.priceChild)+' Kč':'')+'</div></div>'+
+       '<div class="al-acts">'+
+         '<button class="al-btn" data-act="up" data-i="'+i+'" title="Nahoru">&#8593;</button>'+
+         '<button class="al-btn" data-act="down" data-i="'+i+'" title="Dolů">&#8595;</button>'+
+         '<button class="al-btn" data-act="edit" data-i="'+i+'">Upravit</button>'+
+         '<button class="al-btn del" data-act="del" data-i="'+i+'">Smazat</button>'+
+       '</div></div>'; }
+  box.innerHTML=h;
+  var b=box.getElementsByClassName("al-btn"),k;
+  for(k=0;k<b.length;k++){ b[k].onclick=rowAction; }
+}
+function swap(a,b){ var t=DATA[a]; DATA[a]=DATA[b]; DATA[b]=t; }
+function rowAction(){
+  var act=this.getAttribute("data-act"), i=parseInt(this.getAttribute("data-i"),10);
+  if(act==="edit"){ fillForm(i); return; }
+  if(act==="del"){ if(confirm("Smazat zájezd \""+DATA[i].name+"\"?")){ DATA.splice(i,1); clearForm(); renderList(); markChanged(); } return; }
+  if(act==="up"&&i>0){ swap(i,i-1); renderList(); markChanged(); return; }
+  if(act==="down"&&i<DATA.length-1){ swap(i,i+1); renderList(); markChanged(); return; }
+}
+function fillForm(i){
+  var it=DATA[i]; editIndex=i;
+  gv("fName",it.name); gv("fCountry",it.country); gv("fTerm",it.term||""); gv("fPriceA",it.priceAdult); gv("fPriceC",it.priceChild?it.priceChild:""); gv("fDur",it.dur); gv("fNights",it.nights);
+  document.getElementById("fTop").checked=!!it.top; document.getElementById("fLastmin").checked=!!it.lastmin;
+  gv("fHi",(it.highlights||[]).join("\n")); gv("fCats",(it.cats||[]).join(", ")); gv("fImg",it.img||""); gv("fDesc",it.desc||"");
+  document.getElementById("formTitle").textContent="Upravit zájezd";
+  document.getElementById("saveBtn").textContent="Uložit změny";
+  document.getElementById("cancelBtn").style.display="";
+  document.getElementById("adminForm").scrollIntoView(true);
+}
+function clearForm(){
+  editIndex=-1;
+  gv("fName","");gv("fCountry","");gv("fTerm","");gv("fPriceA","");gv("fPriceC","");gv("fDur","");gv("fNights","");gv("fHi","");gv("fCats","");gv("fImg","");gv("fDesc","");
+  document.getElementById("fTop").checked=false; document.getElementById("fLastmin").checked=false;
+  document.getElementById("formTitle").textContent="Nový zájezd";
+  document.getElementById("saveBtn").textContent="Přidat zájezd";
+  document.getElementById("cancelBtn").style.display="none";
+}
+function readForm(){
+  var name=val("fName");
+  if(!name){ alert("Vyplňte prosím název zájezdu."); document.getElementById("fName").focus(); return null; }
+  return { name:name, country:val("fCountry"), term:val("fTerm"), cats:parseCats(document.getElementById("fCats").value),
+    priceAdult:toNum(val("fPriceA")), priceChild:toNum(val("fPriceC")), dur:val("fDur"), nights:toNum(val("fNights")),
+    top:document.getElementById("fTop").checked, lastmin:document.getElementById("fLastmin").checked,
+    highlights:parseLines(document.getElementById("fHi").value), img:val("fImg"), desc:val("fDesc") };
+}
+function saveForm(){
+  var o=readForm(); if(!o) return;
+  if(editIndex>=0&&editIndex<DATA.length){ DATA[editIndex]=o; } else { DATA.push(o); }
+  renderList(); clearForm(); markChanged();
+}
+
+/* ---- Export / Import / Reset ---- */
+function exportJson(){
+  var blob=JSON.stringify(payload(),null,2), a=document.createElement("a");
+  a.href="data:application/json;charset=utf-8,"+encodeURIComponent(blob);
+  a.download="lck_vyloha_data_"+stamp()+".json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+function importJson(file){
+  var r=new FileReader();
+  r.onload=function(){
+    try{ var o=JSON.parse(r.result);
+      if(o&&o.data&&o.data.length!==undefined){ applyPayload(o); renderList(); fillSettings(); clearForm(); markChanged();
+        conn("Naimportováno "+DATA.length+" zájezdů. Nezapomeňte Publikovat.","warn"); }
+      else { alert("Soubor nemá správný formát (chybí pole \"data\")."); }
+    }catch(e){ alert("Nepodařilo se načíst: "+e.message); }
+  };
+  r.readAsText(file);
+}
+function resetData(){ if(!confirm("Nahradit ukázkovými daty? Rozpracované se přepíše.")) return; DATA=clone(DEFAULT_DATA); clearForm(); renderList(); markChanged(); }
+
+/* ---- Nastavení ---- */
+function fillSettings(){
+  gv("sAgency",CONFIG.agency); gv("sEyebrow",CONFIG.eyebrow); gv("sTagline",CONFIG.tagline);
+  gv("sTicker",CONFIG.tickerText); gv("sPhone",CONFIG.phone); gv("sWeb",CONFIG.web);
+  gv("sPageUrl",CONFIG.pageUrl); gv("sRotate", Math.round(CONFIG.rotateMs/1000));
+}
+function saveSettings(){
+  CONFIG.agency=val("sAgency"); CONFIG.eyebrow=val("sEyebrow"); CONFIG.tagline=val("sTagline");
+  CONFIG.tickerText=val("sTicker"); CONFIG.phone=val("sPhone"); CONFIG.web=val("sWeb"); CONFIG.pageUrl=val("sPageUrl");
+  var sec=toNum(val("sRotate")); if(sec<4){ sec=4; } CONFIG.rotateMs=sec*1000;
+  markChanged();
+  var m=document.getElementById("setMsg"); m.textContent="Uloženo do rozpracování ✓ — publikuj do výlohy nahoře."; setTimeout(function(){ m.textContent=""; },3000);
+}
+
+/* ---- taby ---- */
+function showTab(name){
+  document.getElementById("tabZajezdy").style.display=(name==="zajezdy")?"":"none";
+  document.getElementById("tabNastaveni").style.display=(name==="nastaveni")?"":"none";
+  document.getElementById("tbZ").className="tab"+(name==="zajezdy"?" on":"");
+  document.getElementById("tbN").className="tab"+(name==="nastaveni"?" on":"");
+}
+
+/* ---- init ---- */
+function bind(){
+  document.getElementById("btnConnect").onclick=doConnect;
+  document.getElementById("btnCreate").onclick=doCreate;
+  document.getElementById("btnPublish").onclick=doPublish;
+  document.getElementById("tbZ").onclick=function(){ showTab("zajezdy"); };
+  document.getElementById("tbN").onclick=function(){ showTab("nastaveni"); };
+  document.getElementById("saveBtn").onclick=saveForm;
+  document.getElementById("cancelBtn").onclick=clearForm;
+  document.getElementById("exportBtn").onclick=exportJson;
+  document.getElementById("resetBtn").onclick=resetData;
+  document.getElementById("saveSetBtn").onclick=saveSettings;
+  document.getElementById("importFile").onchange=function(){ if(this.files&&this.files[0]){ importJson(this.files[0]); this.value=""; } };
+  window.onbeforeunload=function(){ if(dirty){ return "Máte nepublikované změny."; } };
+}
+function init(){
+  var cfg=loadCfg(); gv("cfgToken",cfg.token||""); gv("cfgGist",cfg.gistId||"");
+  var local=loadLocal();
+  if(local){ applyPayload(local); } else { DATA=clone(DEFAULT_DATA); CONFIG=clone(DEFAULT_CONFIG); }
+  renderList(); fillSettings(); clearForm();
+  if(cfg.gistId){ showTvUrl(cfg.gistId); }
+  setDirty(false);
+  bind();
+  if(cfg.gistId){ conn("Uložené připojení nalezeno. „Načíst z výlohy“ stáhne aktuální data.","ok"); }
+  else { conn("Zatím bez připojení — zadejte token a klikněte „Vytvořit nový gist“.","warn"); }
+}
+init();
+</script>
+</body>
+</html>
